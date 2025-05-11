@@ -1,0 +1,60 @@
+classes_list = ["三态组织", "双态组织", "等轴组织", "网篮组织", "魏氏组织"]
+
+[app]
+style = "Fusion"
+font = "Noto Sans SC"
+icon = "./favicon/icon.svg"
+title = "钛合金微观组织图像分类GUI"
+
+[panel]
+minw = 400
+minh = 400
+
+[img_panel]
+label = "当前图片"
+name_null = "文件名: -"
+idx_null = "序号: -/-"
+name_label = "文件名:"
+idx_label = "序号:"
+
+[pred_panel]
+label = "分类置信度"
+name_null = "分类结果: -"
+conf_null = "置信度: -"
+name_label = "分类结果:"
+conf_label = "置信度:"
+
+[load_panel]
+label = "数据加载"
+img_btn = "加载图片"
+model_btn = "加载模型"
+
+[nav_panel]
+label = "图片导航"
+prev_btn = "上一张"
+next_btn = "下一张"
+
+[model_panel]
+label = "模型预测"
+box_null = "请加载模型文件夹"
+box_item = "选择模型"
+pred_btn = "预测"
+
+[status_bar]
+null = "状态: 未加载"
+version = "版本: 1.0.0"
+label = "状态: 已加载"
+img = "张图片"
+model = "个模型"
+
+[load]
+img_extensions = ["*.bmp", "*.jpg", "*.jpeg", "*.png", "*.tif", "*.tiff"]
+model_extensions = ["*.onnx"]
+
+[plot]
+xlabel = "类别"
+ylabel = "置信度(%)"
+
+[question]
+title = "退出确认"
+text = "是否退出程序"
