@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 )
 
 from util.config import ConfigManager
-from util.gui import MicroTiGUI
+from util.gui import GUI
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     app.setFont(QFont(config["app"]["font"]))
     app.setWindowIcon(QIcon(config["app"]["icon"]))
 
-    window = MicroTiGUI()
+    window = GUI()
     window.show()
 
     sys.exit(app.exec())

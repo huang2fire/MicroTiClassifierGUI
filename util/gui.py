@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 from .config import ConfigManager
 
 
-class MicroTiGUI(QMainWindow):
+class GUI(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
@@ -59,14 +59,14 @@ class MicroTiGUI(QMainWindow):
         # --- 主容器 ---
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
-        self.main_layout = QVBoxLayout(main_widget)
-        self.main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
 
-        self.init_view_panels()
-        self.init_control_panels()
+        self.init_view_panels(main_layout)
+        self.init_control_panels(main_layout)
         self.init_status_bar()
 
-    def init_view_panels(self) -> None:
+    def init_view_panels(self, parent_layout: QVBoxLayout) -> None:
         ## --- 视图面板 ---
         panels_widget = QGroupBox()
         panels_layout = QHBoxLayout(panels_widget)
@@ -74,7 +74,7 @@ class MicroTiGUI(QMainWindow):
         self.init_left_view_panel(panels_layout)
         self.init_right_view_panel(panels_layout)
 
-        self.main_layout.addWidget(panels_widget, 1)
+        parent_layout.addWidget(panels_widget, 1)
 
     def init_left_view_panel(self, parent_layout: QHBoxLayout) -> None:
         ### --- 左侧面板 ---
@@ -146,7 +146,7 @@ class MicroTiGUI(QMainWindow):
 
         parent_layout.addWidget(panel_widget, 1)
 
-    def init_control_panels(self) -> None:
+    def init_control_panels(self, parent_layout: QVBoxLayout) -> None:
         ## --- 控制面板 ---
         panels_widget = QGroupBox()
         panels_layout = QHBoxLayout(panels_widget)
@@ -155,7 +155,7 @@ class MicroTiGUI(QMainWindow):
         self.init_center_control_panel(panels_layout)
         self.init_right_control_panel(panels_layout)
 
-        self.main_layout.addWidget(panels_widget)
+        parent_layout.addWidget(panels_widget)
 
     def init_left_control_panel(self, parent_layout: QHBoxLayout) -> None:
         ### --- 左侧面板 ---
@@ -209,6 +209,7 @@ class MicroTiGUI(QMainWindow):
         parent_layout.addWidget(panel_widget)
 
     def init_status_bar(self) -> None:
+        ## --- 状态栏 ---
         status_bar = self.statusBar()
 
         self.status_bar_label = QLabel(self.config["status_bar"]["null"])
@@ -332,19 +333,25 @@ class MicroTiGUI(QMainWindow):
 
     def preprocess_image(self, img_path: Path) -> np.ndarray:
         with Image.open(img_path) as img:
+            # 1. ToImage
             img = img.convert("RGB")
 
+            # 2. Resize
             img = img.resize((256, 256), Image.Resampling.BILINEAR)
 
+            # 3. CenterCrop
             img = img.crop((16, 16, 240, 240))
 
+            # 4. ToTensor
             img_np = np.array(img) / 255.0
             img_np = img_np.transpose((2, 0, 1))
 
+            # 5. Normalize
             mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
             std = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
             img_np = (img_np - mean) / std
 
+            # 6. ToBatch
             img_np = np.expand_dims(img_np, axis=0).astype(np.float32)
 
             return img_np
