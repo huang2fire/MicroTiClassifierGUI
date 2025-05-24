@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List
 
 import numpy as np
 import onnxruntime as ort
@@ -46,8 +46,8 @@ class GUI(QMainWindow):
         self.model_path_list: List[Path] = []
 
         self.img_idx: int = -1
-        self.ort_session: Optional[ort.InferenceSession] = None
-        self.probs: Optional[np.ndarray] = None
+        self.ort_session: ort.InferenceSession | None = None
+        self.probs: np.ndarray = np.array([])
 
         self.init_main_ui()
 
@@ -233,42 +233,48 @@ class GUI(QMainWindow):
 
     def load_images(self) -> None:
         dir_path = QFileDialog.getExistingDirectory(self)
-        if dir_path:
-            extensions = self.config["load"]["img_extensions"]
-            self.img_path_list = [
-                img_path for ext in extensions for img_path in Path(dir_path).glob(ext)
-            ]
 
-            self.img_idx = 0 if self.img_path_list else -1
+        if not dir_path:
+            return
 
-            self.update_image_panel()
-            self.update_image_info()
-            self.update_buttons()
-            self.update_status_bar()
+        extensions = self.config["load"]["img_extensions"]
+        self.img_path_list = [
+            img_path for ext in extensions for img_path in Path(dir_path).glob(ext)
+        ]
+
+        self.img_idx = 0 if self.img_path_list else -1
+
+        self.update_image_panel()
+        self.update_image_info()
+        self.update_buttons()
+        self.update_status_bar()
 
     def load_models(self) -> None:
         dir_path = QFileDialog.getExistingDirectory(self)
-        if dir_path:
-            extensions = self.config["load"]["model_extensions"]
-            self.model_path_list = [
-                model_path
-                for ext in extensions
-                for model_path in Path(dir_path).glob(ext)
-            ]
 
-            if self.model_path_list:
-                self.model_combobox.clear()
-                self.model_combobox.addItem(self.config["model_panel"]["box_item"])
-                self.model_combobox.addItems(
-                    [path.name for path in self.model_path_list]
-                )
+        if not dir_path:
+            return
 
-            self.update_buttons()
-            self.update_status_bar()
+        extensions = self.config["load"]["model_extensions"]
+        self.model_path_list = [
+            model_path for ext in extensions for model_path in Path(dir_path).glob(ext)
+        ]
+
+        if not self.model_path_list:
+            return
+
+        self.model_combobox.clear()
+        self.model_combobox.addItem(self.config["model_panel"]["box_item"])
+        self.model_combobox.addItems([path.name for path in self.model_path_list])
+
+        self.update_buttons()
+        self.update_status_bar()
 
     def select_model(self, index: int) -> None:
-        if index > 0:
-            self.ort_session = ort.InferenceSession(self.model_path_list[index - 1])
+        if index <= 0:
+            return
+
+        self.ort_session = ort.InferenceSession(self.model_path_list[index - 1])
 
         self.update_buttons()
 
@@ -315,21 +321,25 @@ class GUI(QMainWindow):
         )
 
     def show_prev_img(self) -> None:
-        if self.img_idx > 0:
-            self.img_idx -= 1
+        if self.img_idx <= 0:
+            return
 
-            self.update_image_panel()
-            self.update_image_info()
+        self.img_idx -= 1
 
-            self.update_buttons()
+        self.update_image_panel()
+        self.update_image_info()
+
+        self.update_buttons()
 
     def show_next_img(self) -> None:
-        if self.img_idx < len(self.img_path_list) - 1:
-            self.img_idx += 1
+        if self.img_idx >= len(self.img_path_list) - 1:
+            return
 
-            self.update_image_panel()
-            self.update_image_info()
-            self.update_buttons()
+        self.img_idx += 1
+
+        self.update_image_panel()
+        self.update_image_info()
+        self.update_buttons()
 
     def preprocess_image(self, img_path: Path) -> np.ndarray:
         with Image.open(img_path) as img:
@@ -360,6 +370,10 @@ class GUI(QMainWindow):
         img_path = self.img_path_list[self.img_idx]
 
         input_value = self.preprocess_image(img_path)
+
+        if self.ort_session is None:
+            return
+
         input_name = self.ort_session.get_inputs()[0].name
         output_name = self.ort_session.get_outputs()[0].name
 

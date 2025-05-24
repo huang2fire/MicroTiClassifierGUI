@@ -1,9 +1,7 @@
 import sys
 
 from PySide6.QtGui import QFont, QIcon
-from PySide6.QtWidgets import (
-    QApplication,
-)
+from PySide6.QtWidgets import QApplication
 
 from util.config import ConfigManager
 from util.gui import GUI
